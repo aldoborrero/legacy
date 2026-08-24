@@ -445,7 +445,6 @@ public class PlayoutItemConverter(
                         nextPlayoutItem.Tracks.Subtitle.StreamIndex = subtitle.StreamIndex;
                     }
                 }
-                // next only supports sidecar text subtitles at the moment; ignore non-extracted text subs
                 else if (subtitle.IsExtracted && !string.IsNullOrWhiteSpace(subtitle.Path))
                 {
                     if (nextPlayoutItem.Tracks?.Subtitle?.Source is null)
@@ -460,6 +459,15 @@ public class PlayoutItemConverter(
 
                         SetInOutPoints(playoutItem, nextPlayoutItem.Tracks.Subtitle.Source);
                     }
+                }
+                else if (nextPlayoutItem.Tracks?.Subtitle?.StreamIndex is null)
+                {
+                    // Non-extracted embedded text subtitle: pass the in-band stream index. The next
+                    // engine reads and converts it from the video on the fly (convert_to_vtt), so no
+                    // pre-extraction to a sidecar file is required.
+                    nextPlayoutItem.Tracks ??= new Core.Next.PlayoutItemTracks();
+                    nextPlayoutItem.Tracks.Subtitle ??= new Core.Next.TrackSelection();
+                    nextPlayoutItem.Tracks.Subtitle.StreamIndex = subtitle.StreamIndex;
                 }
             }
             else if (!IsRemoteUri(subtitle.Path))
